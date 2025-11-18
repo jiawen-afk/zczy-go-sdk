@@ -1,13 +1,13 @@
-package main
+package example
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/Jiawen-AFK/zczy-go-sdk"
+	"github.com/jiawen-afk/zczy-go-sdk"
 )
 
-func main() {
+func ClientExample() {
 	// 配置客户端参数
 	config := &zczy.Config{
 		AppKey:    "your_app_key_here",

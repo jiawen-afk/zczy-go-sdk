@@ -1,3 +1,3 @@
-module github.com/Jiawen-AFK/zczy-go-sdk
+module github.com/jiawen-afk/zczy-go-sdk
 
 go 1.21

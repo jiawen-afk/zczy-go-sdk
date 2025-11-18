@@ -40,3 +40,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Ai files
+CLAUDE.md
+.claude
