@@ -208,3 +208,50 @@ func TestSetGateway(t *testing.T) {
 		t.Errorf("SetGateway() 设置失败，期望=%s，实际=%s", newGateway, client.gateway)
 	}
 }
+
+// 测试Base64格式公钥加密
+func TestEncryptAppSecretWithBase64Key(t *testing.T) {
+	// 中储智运提供的Base64格式公钥
+	publicKey := "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALT8QammE81aGfzzmFj0LjHKAOWiyRLESX4fwomlvWr3nVvx4rSzKGz176M/c9UsLQFqJkA0KIk0YxDgS1QG5K8CAwEAAQ=="
+
+	client := &Client{
+		appSecret: "testSecret123",
+		publicKey: publicKey,
+	}
+
+	encrypted, err := client.encryptAppSecret()
+	if err != nil {
+		t.Fatalf("encryptAppSecret() 失败: %v", err)
+	}
+
+	if encrypted == "" {
+		t.Errorf("encryptAppSecret() 返回空字符串")
+	}
+
+	t.Logf("加密后的appSecret: %s", encrypted)
+}
+
+// 测试PEM格式公钥加密
+func TestEncryptAppSecretWithPEMKey(t *testing.T) {
+	// PEM格式的测试公钥
+	pemKey := `-----BEGIN PUBLIC KEY-----
+MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALT8QammE81aGfzzmFj0LjHKAOWiyRLE
+SX4fwomlvWr3nVvx4rSzKGz176M/c9UsLQFqJkA0KIk0YxDgS1QG5K8CAwEAAQ==
+-----END PUBLIC KEY-----`
+
+	client := &Client{
+		appSecret: "testSecret123",
+		publicKey: pemKey,
+	}
+
+	encrypted, err := client.encryptAppSecret()
+	if err != nil {
+		t.Fatalf("encryptAppSecret() 失败: %v", err)
+	}
+
+	if encrypted == "" {
+		t.Errorf("encryptAppSecret() 返回空字符串")
+	}
+
+	t.Logf("加密后的appSecret: %s", encrypted)
+}

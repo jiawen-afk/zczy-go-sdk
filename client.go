@@ -189,21 +189,58 @@ func (c *Client) generateSign(params map[string]string) string {
 
 // encryptAppSecret 使用RSA公钥加密appSecret
 func (c *Client) encryptAppSecret() (string, error) {
-	// 解析PEM格式的公钥
+	var rsaPub *rsa.PublicKey
+
+	// 尝试解析PEM格式的公钥
 	block, _ := pem.Decode([]byte(c.publicKey))
-	if block == nil {
-		return "", errors.New("failed to parse PEM block containing the public key")
-	}
+	if block != nil {
+		// PEM格式公钥
+		pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+		if err != nil {
+			// 尝试PKCS1格式
+			pub, err = x509.ParsePKCS1PublicKey(block.Bytes)
+			if err != nil {
+				return "", fmt.Errorf("failed to parse PEM public key: %w", err)
+			}
+			var ok bool
+			rsaPub, ok = pub.(*rsa.PublicKey)
+			if !ok {
+				return "", errors.New("not RSA public key")
+			}
+		} else {
+			var ok bool
+			rsaPub, ok = pub.(*rsa.PublicKey)
+			if !ok {
+				return "", errors.New("not RSA public key")
+			}
+		}
+	} else {
+		// 尝试Base64编码的原始公钥数据
+		keyBytes, err := base64.StdEncoding.DecodeString(c.publicKey)
+		if err != nil {
+			return "", fmt.Errorf("failed to decode base64 public key: %w", err)
+		}
 
-	// 解析公钥
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return "", fmt.Errorf("failed to parse public key: %w", err)
-	}
-
-	rsaPub, ok := pub.(*rsa.PublicKey)
-	if !ok {
-		return "", errors.New("not RSA public key")
+		// 尝试PKIX格式
+		pub, err := x509.ParsePKIXPublicKey(keyBytes)
+		if err != nil {
+			// 尝试PKCS1格式
+			pub, err = x509.ParsePKCS1PublicKey(keyBytes)
+			if err != nil {
+				return "", fmt.Errorf("failed to parse public key: %w", err)
+			}
+			var ok bool
+			rsaPub, ok = pub.(*rsa.PublicKey)
+			if !ok {
+				return "", errors.New("not RSA public key")
+			}
+		} else {
+			var ok bool
+			rsaPub, ok = pub.(*rsa.PublicKey)
+			if !ok {
+				return "", errors.New("not RSA public key")
+			}
+		}
 	}
 
 	// RSA加密
