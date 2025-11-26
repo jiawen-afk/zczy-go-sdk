@@ -165,6 +165,27 @@ client, _ := zczy.NewClient(config)
 client.SetGateway("https://production.zczy56.com/api")
 ```
 
+### 5. 多货主场景配置（可选）
+
+如果您的系统需要支持多个货主，可以通过 `ConsignorId` 参数来指定货主ID：
+
+```go
+// 方式1：创建客户端时指定货主ID
+config := &zczy.Config{
+    AppKey:      "your_app_key",
+    AppSecret:   "your_app_secret",
+    PublicKey:   "your_public_key",
+    ConsignorId: "your_consignor_id", // 货主ID
+}
+client, _ := zczy.NewClient(config)
+
+// 方式2：动态切换货主ID
+client.SetConsignorId("another_consignor_id")
+
+// ConsignorId 会自动添加到所有 API 请求参数中
+resp, err := client.CreateOrder(orderReq)
+```
+
 ## 业务API
 
 ### 订单管理
@@ -400,13 +421,14 @@ func handleBreachCallback(w http.ResponseWriter, r *http.Request) {
 
 ### Config 配置参数
 
-| 参数      | 类型   | 必填 | 说明                              |
-| --------- | ------ | ---- | --------------------------------- |
-| AppKey    | string | 是   | 接入时申请的 app_key              |
-| AppSecret | string | 是   | 接入时申请的 app_secret           |
-| PublicKey | string | 是   | RSA 公钥，支持 Base64 编码或 PEM 格式 |
-| Gateway   | string | 否   | API 网关地址，默认为联调环境      |
-| Timeout   | int    | 否   | HTTP 请求超时时间（秒），默认 30 秒 |
+| 参数        | 类型   | 必填 | 说明                              |
+| ----------- | ------ | ---- | --------------------------------- |
+| AppKey      | string | 是   | 接入时申请的 app_key              |
+| AppSecret   | string | 是   | 接入时申请的 app_secret           |
+| PublicKey   | string | 是   | RSA 公钥，支持 Base64 编码或 PEM 格式 |
+| Gateway     | string | 否   | API 网关地址，默认为联调环境      |
+| ConsignorId | string | 否   | 货主ID，用于多货主场景            |
+| Timeout     | int    | 否   | HTTP 请求超时时间（秒），默认 30 秒 |
 
 **PublicKey 格式说明：**
 

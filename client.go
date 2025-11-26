@@ -32,20 +32,22 @@ const (
 
 // Client 中储智运SDK客户端
 type Client struct {
-	appKey     string
-	appSecret  string
-	publicKey  string
-	gateway    string
-	httpClient *http.Client
+	appKey      string
+	appSecret   string
+	publicKey   string
+	gateway     string
+	consignorId string
+	httpClient  *http.Client
 }
 
 // Config 客户端配置
 type Config struct {
-	AppKey    string // 接入时申请的app_key
-	AppSecret string // 接入时申请的app_secret
-	PublicKey string // RSA公钥，用于加密appSecret
-	Gateway   string // API网关地址，默认为联调环境
-	Timeout   int    // HTTP请求超时时间（秒），默认30秒
+	AppKey      string // 接入时申请的app_key
+	AppSecret   string // 接入时申请的app_secret
+	PublicKey   string // RSA公钥，用于加密appSecret
+	Gateway     string // API网关地址，默认为联调环境
+	ConsignorId string // 货主ID（可选）
+	Timeout     int    // HTTP请求超时时间（秒），默认30秒
 }
 
 // Response API响应结构
@@ -78,10 +80,11 @@ func NewClient(config *Config) (*Client, error) {
 	}
 
 	return &Client{
-		appKey:    config.AppKey,
-		appSecret: config.AppSecret,
-		publicKey: config.PublicKey,
-		gateway:   gateway,
+		appKey:      config.AppKey,
+		appSecret:   config.AppSecret,
+		publicKey:   config.PublicKey,
+		gateway:     gateway,
+		consignorId: config.ConsignorId,
 		httpClient: &http.Client{
 			Timeout: time.Duration(timeout) * time.Second,
 		},
@@ -93,15 +96,15 @@ func (c *Client) SetGateway(gateway string) {
 	c.gateway = gateway
 }
 
+// SetConsignorId 设置货主ID
+func (c *Client) SetConsignorId(consignorId string) {
+	c.consignorId = consignorId
+}
+
 // Execute 执行API调用
-func (c *Client) Execute(method string, params any, consignorIdParam ...string) (*Response, error) {
-	// 处理consignorId参数
-	consignorId := ""
-	if len(consignorIdParam) > 0 {
-		consignorId = consignorIdParam[0]
-	}
+func (c *Client) Execute(method string, params any) (*Response, error) {
 	// 构建请求参数
-	reqParams, err := c.buildRequestParams(method, params, consignorId)
+	reqParams, err := c.buildRequestParams(method, params)
 	if err != nil {
 		return nil, fmt.Errorf("build request params error: %w", err)
 	}
@@ -116,7 +119,7 @@ func (c *Client) Execute(method string, params any, consignorIdParam ...string) 
 }
 
 // buildRequestParams 构建请求参数
-func (c *Client) buildRequestParams(method string, params any, consignorId string) (map[string]string, error) {
+func (c *Client) buildRequestParams(method string, params any) (map[string]string, error) {
 	// 使用Unix毫秒时间戳（API要求毫秒级）
 	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
@@ -164,8 +167,10 @@ func (c *Client) buildRequestParams(method string, params any, consignorId strin
 		"version":     Version,
 		"params":      paramsStr,
 	}
-	if consignorId != "" {
-		requestParams["consignorId"] = consignorId
+
+	// 如果配置了货主ID，添加到请求参数中
+	if c.consignorId != "" {
+		requestParams["consignorId"] = c.consignorId
 	}
 
 	return requestParams, nil

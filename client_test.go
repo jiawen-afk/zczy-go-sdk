@@ -255,3 +255,61 @@ SX4fwomlvWr3nVvx4rSzKGz176M/c9UsLQFqJkA0KIk0YxDgS1QG5K8CAwEAAQ==
 
 	t.Logf("加密后的appSecret: %s", encrypted)
 }
+
+// 测试ConsignorId配置
+func TestConsignorIdConfig(t *testing.T) {
+	// 测试通过Config设置ConsignorId
+	config := &Config{
+		AppKey:      "test_key",
+		AppSecret:   "test_secret",
+		PublicKey:   "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALT8QammE81aGfzzmFj0LjHKAOWiyRLESX4fwomlvWr3nVvx4rSzKGz176M/c9UsLQFqJkA0KIk0YxDgS1QG5K8CAwEAAQ==",
+		ConsignorId: "test_consignor_123",
+	}
+
+	client, err := NewClient(config)
+	if err != nil {
+		t.Fatalf("NewClient() 失败: %v", err)
+	}
+
+	if client.consignorId != "test_consignor_123" {
+		t.Errorf("ConsignorId 配置失败，期望=test_consignor_123，实际=%s", client.consignorId)
+	}
+
+	// 测试通过SetConsignorId动态设置
+	client.SetConsignorId("new_consignor_456")
+	if client.consignorId != "new_consignor_456" {
+		t.Errorf("SetConsignorId() 设置失败，期望=new_consignor_456，实际=%s", client.consignorId)
+	}
+}
+
+// 测试buildRequestParams包含ConsignorId
+func TestBuildRequestParamsWithConsignorId(t *testing.T) {
+	client := &Client{
+		appKey:      "test_key",
+		appSecret:   "test_secret",
+		publicKey:   "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALT8QammE81aGfzzmFj0LjHKAOWiyRLESX4fwomlvWr3nVvx4rSzKGz176M/c9UsLQFqJkA0KIk0YxDgS1QG5K8CAwEAAQ==",
+		consignorId: "test_consignor_789",
+	}
+
+	params, err := client.buildRequestParams("test.method", nil)
+	if err != nil {
+		t.Fatalf("buildRequestParams() 失败: %v", err)
+	}
+
+	// 验证consignorId是否包含在请求参数中
+	if params["consignorId"] != "test_consignor_789" {
+		t.Errorf("请求参数中缺少consignorId或值不正确，期望=test_consignor_789，实际=%s", params["consignorId"])
+	}
+
+	// 测试空ConsignorId的情况
+	client.consignorId = ""
+	params2, err := client.buildRequestParams("test.method", nil)
+	if err != nil {
+		t.Fatalf("buildRequestParams() 失败: %v", err)
+	}
+
+	// 验证空ConsignorId时参数中不包含consignorId
+	if _, exists := params2["consignorId"]; exists {
+		t.Errorf("ConsignorId为空时，请求参数不应包含consignorId字段")
+	}
+}
