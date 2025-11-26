@@ -404,9 +404,25 @@ func handleBreachCallback(w http.ResponseWriter, r *http.Request) {
 | --------- | ------ | ---- | --------------------------------- |
 | AppKey    | string | 是   | 接入时申请的 app_key              |
 | AppSecret | string | 是   | 接入时申请的 app_secret           |
-| PublicKey | string | 是   | RSA 公钥，用于加密 appSecret      |
+| PublicKey | string | 是   | RSA 公钥，支持 Base64 编码或 PEM 格式 |
 | Gateway   | string | 否   | API 网关地址，默认为联调环境      |
 | Timeout   | int    | 否   | HTTP 请求超时时间（秒），默认 30 秒 |
+
+**PublicKey 格式说明：**
+
+SDK 支持两种公钥格式：
+
+1. **Base64 编码格式**（推荐，中储智运默认提供）：
+   ```
+   MFwwDQ******8CAwEAAQ==
+   ```
+
+2. **PEM 格式**：
+   ```
+   -----BEGIN PUBLIC KEY-----
+   MFwwDQ******8CAwEAAQ==
+   -----END PUBLIC KEY-----
+   ```
 
 ### Response 响应结构
 

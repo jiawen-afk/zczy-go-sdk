@@ -112,7 +112,8 @@ func (c *Client) Execute(method string, params any) (*Response, error) {
 
 // buildRequestParams 构建请求参数
 func (c *Client) buildRequestParams(method string, params any) (map[string]string, error) {
-	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
+	// 使用Unix毫秒时间戳（API要求毫秒级）
+	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
 	// 转换params为JSON字符串
 	var paramsStr string
