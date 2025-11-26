@@ -288,7 +288,7 @@ func (b *CreateOrderRequestBuilder) SetOrderAddressInfo(addressInfo OrderAddress
 	return b
 }
 
-func (b *CreateOrderRequestBuilder) SetOrderReceiptInfo(receiptInfo *OrderReceiptInfo) *CreateOrderRequestBuilder {
+func (b *CreateOrderRequestBuilder) SetOrderReceiptInfo(receiptInfo OrderReceiptInfo) *CreateOrderRequestBuilder {
 	b.req.OrderReceiptInfo = receiptInfo
 	return b
 }

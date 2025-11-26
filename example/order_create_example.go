@@ -208,7 +208,7 @@ func createMultiCargoOrder(client *zczy.Client) {
 		AddCargo(*cargo2).
 		AddCargo(*cargo3).
 		SetOrderAddressInfo(*addressInfo).
-		SetOrderReceiptInfo(&zczy.OrderReceiptInfo{
+		SetOrderReceiptInfo(zczy.OrderReceiptInfo{
 			ReceiptLabel: "回单标签001",
 			ReceiptMoney: "1000",
 		}).

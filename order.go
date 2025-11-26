@@ -88,10 +88,10 @@ type OrderReceiptInfo struct {
 
 // CreateOrderRequest 创建订单请求
 type CreateOrderRequest struct {
-	OrderInfo        OrderInfo         `json:"orderInfo"`                  // 订单信息
-	CargoList        []CargoInfo       `json:"cargoList"`                  // 货物信息
-	OrderAddressInfo OrderAddressInfo  `json:"orderAddressInfo"`           // 收发货信息
-	OrderReceiptInfo *OrderReceiptInfo `json:"orderReceiptInfo,omitempty"` // 押回单信息（可选）
+	OrderInfo        OrderInfo        `json:"orderInfo"`                  // 订单信息
+	CargoList        []CargoInfo      `json:"cargoList"`                  // 货物信息
+	OrderAddressInfo OrderAddressInfo `json:"orderAddressInfo"`           // 收发货信息
+	OrderReceiptInfo OrderReceiptInfo `json:"orderReceiptInfo,omitempty"` // 押回单信息（可选）
 }
 
 // CreateOrderResponse 创建订单响应
