@@ -94,9 +94,14 @@ func (c *Client) SetGateway(gateway string) {
 }
 
 // Execute 执行API调用
-func (c *Client) Execute(method string, params any) (*Response, error) {
+func (c *Client) Execute(method string, params any, consignorIdParam ...string) (*Response, error) {
+	// 处理consignorId参数
+	consignorId := ""
+	if len(consignorIdParam) > 0 {
+		consignorId = consignorIdParam[0]
+	}
 	// 构建请求参数
-	reqParams, err := c.buildRequestParams(method, params)
+	reqParams, err := c.buildRequestParams(method, params, consignorId)
 	if err != nil {
 		return nil, fmt.Errorf("build request params error: %w", err)
 	}
@@ -111,7 +116,7 @@ func (c *Client) Execute(method string, params any) (*Response, error) {
 }
 
 // buildRequestParams 构建请求参数
-func (c *Client) buildRequestParams(method string, params any) (map[string]string, error) {
+func (c *Client) buildRequestParams(method string, params any, consignorId string) (map[string]string, error) {
 	// 使用Unix毫秒时间戳（API要求毫秒级）
 	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
@@ -158,6 +163,9 @@ func (c *Client) buildRequestParams(method string, params any) (map[string]strin
 		"sign_method": SignMethod,
 		"version":     Version,
 		"params":      paramsStr,
+	}
+	if consignorId != "" {
+		requestParams["consignorId"] = consignorId
 	}
 
 	return requestParams, nil
