@@ -54,7 +54,7 @@ type Config struct {
 type Response struct {
 	Code    string `json:"code"`    // 返回码
 	Message string `json:"message"` // 返回消息
-	Data    any    `json:"data"`    // 返回数据
+	Result  any    `json:"result"`  // 返回数据
 }
 
 // NewClient 创建SDK客户端
