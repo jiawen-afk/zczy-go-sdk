@@ -60,7 +60,7 @@ func main() {
 
     // 检查响应
     if resp.IsSuccess() {
-        fmt.Printf("Success: %+v\n", resp.Data)
+        fmt.Printf("Success: %+v\n", resp.Result)
     } else {
         fmt.Printf("Error: %s - %s\n", resp.Code, resp.Message)
     }

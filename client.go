@@ -317,7 +317,7 @@ func (r *Response) GetData(v any) error {
 		return fmt.Errorf("api error: code=%s, message=%s", r.Code, r.Message)
 	}
 
-	dataBytes, err := json.Marshal(r.Data)
+	dataBytes, err := json.Marshal(r.Result)
 	if err != nil {
 		return fmt.Errorf("marshal data error: %w", err)
 	}

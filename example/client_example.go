@@ -43,7 +43,7 @@ func ClientExample() {
 			fmt.Printf("调用成功！\n")
 			fmt.Printf("返回码: %s\n", resp.Code)
 			fmt.Printf("返回消息: %s\n", resp.Message)
-			fmt.Printf("返回数据: %+v\n", resp.Data)
+			fmt.Printf("返回数据: %+v\n", resp.Result)
 		} else {
 			fmt.Printf("API返回错误: [%s] %s\n", resp.Code, resp.Message)
 		}
@@ -134,5 +134,5 @@ func ClientExample() {
 		return
 	}
 
-	fmt.Printf("请求成功: %+v\n", resp5.Data)
+	fmt.Printf("请求成功: %+v\n", resp5.Result)
 }
