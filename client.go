@@ -101,7 +101,7 @@ func (c *Client) SetConsignorId(consignorId string) {
 	c.consignorId = consignorId
 }
 
-// Execute 执行API调用
+// Execute 执行API调用（POST请求）
 func (c *Client) Execute(method string, params any) (*Response, error) {
 	// 构建请求参数
 	reqParams, err := c.buildRequestParams(method, params)
@@ -109,8 +109,25 @@ func (c *Client) Execute(method string, params any) (*Response, error) {
 		return nil, fmt.Errorf("build request params error: %w", err)
 	}
 
-	// 发送HTTP请求
+	// 发送HTTP POST请求
 	resp, err := c.doRequest(reqParams)
+	if err != nil {
+		return nil, fmt.Errorf("http request error: %w", err)
+	}
+
+	return resp, nil
+}
+
+// ExecuteGet 执行API调用（GET请求）
+func (c *Client) ExecuteGet(method string, params any) (*Response, error) {
+	// 构建请求参数
+	reqParams, err := c.buildRequestParams(method, params)
+	if err != nil {
+		return nil, fmt.Errorf("build request params error: %w", err)
+	}
+
+	// 发送HTTP GET请求
+	resp, err := c.doGetRequest(reqParams)
 	if err != nil {
 		return nil, fmt.Errorf("http request error: %w", err)
 	}
@@ -123,14 +140,21 @@ func (c *Client) buildRequestParams(method string, params any) (map[string]strin
 	// 使用Unix毫秒时间戳（API要求毫秒级）
 	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
 
-	// 转换params为JSON字符串
+	// 转换params为字符串
 	var paramsStr string
 	if params != nil {
-		paramsBytes, err := json.Marshal(params)
-		if err != nil {
-			return nil, fmt.Errorf("marshal params error: %w", err)
+		// 检查是否是map[string]string类型（用于轨迹URL等特殊情况）
+		if paramMap, ok := params.(map[string]string); ok {
+			// 直接使用params字段的值
+			paramsStr = paramMap["params"]
+		} else {
+			// 正常情况：将params序列化为JSON
+			paramsBytes, err := json.Marshal(params)
+			if err != nil {
+				return nil, fmt.Errorf("marshal params error: %w", err)
+			}
+			paramsStr = string(paramsBytes)
 		}
-		paramsStr = string(paramsBytes)
 	} else {
 		paramsStr = ""
 	}
@@ -267,7 +291,23 @@ func (c *Client) encryptAppSecret() (string, error) {
 	return base64.StdEncoding.EncodeToString(encrypted), nil
 }
 
-// doRequest 发送HTTP请求
+// buildTrackURL 构建车辆轨迹网址
+func (c *Client) buildTrackURL(params map[string]string) (string, error) {
+	// 构建GET请求URL（轨迹接口使用 /zczy-erp/html 路径）
+	baseURL := strings.Replace(c.gateway, "/zczy-erp/api", "/zczy-erp/html", 1)
+
+	// 构建查询参数
+	queryParams := url.Values{}
+	for key, value := range params {
+		queryParams.Set(key, value)
+	}
+
+	// 拼接完整URL
+	fullURL := baseURL + "?" + queryParams.Encode()
+	return fullURL, nil
+}
+
+// doRequest 发送HTTP POST请求
 func (c *Client) doRequest(params map[string]string) (*Response, error) {
 	// 构建form数据
 	formData := url.Values{}
@@ -283,6 +323,48 @@ func (c *Client) doRequest(params map[string]string) (*Response, error) {
 
 	// 设置请求头
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+
+	// 发送请求
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("send request error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// 读取响应
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response error: %w", err)
+	}
+
+	// 解析响应
+	var result Response
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("unmarshal response error: %w, body: %s", err, string(body))
+	}
+
+	return &result, nil
+}
+
+// doGetRequest 发送HTTP GET请求
+func (c *Client) doGetRequest(params map[string]string) (*Response, error) {
+	// 构建GET请求URL（轨迹接口使用 /zczy-erp/html 路径）
+	baseURL := strings.Replace(c.gateway, "/zczy-erp/api", "/zczy-erp/html", 1)
+
+	// 构建查询参数
+	queryParams := url.Values{}
+	for key, value := range params {
+		queryParams.Set(key, value)
+	}
+
+	// 拼接完整URL
+	fullURL := baseURL + "?" + queryParams.Encode()
+
+	// 创建GET请求
+	req, err := http.NewRequest("GET", fullURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request error: %w", err)
+	}
 
 	// 发送请求
 	resp, err := c.httpClient.Do(req)

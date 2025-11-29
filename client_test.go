@@ -119,7 +119,7 @@ func TestResponse(t *testing.T) {
 	resp := &Response{
 		Code:    "0000",
 		Message: "success",
-		Data:    map[string]any{"key": "value"},
+		Result:  map[string]any{"key": "value"},
 	}
 
 	if !resp.IsSuccess() {
@@ -130,7 +130,7 @@ func TestResponse(t *testing.T) {
 	resp2 := &Response{
 		Code:    "1001",
 		Message: "error",
-		Data:    nil,
+		Result:  nil,
 	}
 
 	if resp2.IsSuccess() {
@@ -149,7 +149,7 @@ func TestResponseGetData(t *testing.T) {
 	resp := &Response{
 		Code:    "0000",
 		Message: "success",
-		Data: map[string]any{
+		Result: map[string]any{
 			"name":  "test",
 			"value": 123,
 		},
@@ -169,7 +169,7 @@ func TestResponseGetData(t *testing.T) {
 	resp2 := &Response{
 		Code:    "1001",
 		Message: "error",
-		Data:    nil,
+		Result:  nil,
 	}
 
 	var data2 TestData

@@ -7,6 +7,10 @@ const (
 	MethodOrderCancel = "zczy.api.order.cancel"
 	// MethodReceiptConfirm 回单确认
 	MethodReceiptConfirm = "zczy.api.receipt.confirm"
+	// MethodVehicleTrack 获取车辆在途轨迹网址
+	MethodVehicleTrack = "zczy.html.order.cordinate"
+	// MethodOrderCoordinate 在途轨迹
+	MethodOrderCoordinate = "zczy.api.order.cordinate"
 )
 
 // OrderInfo 订单信息
@@ -114,6 +118,43 @@ type ConfirmReceiptRequest struct {
 	Remark              string `json:"remark,omitempty"`              // 备注
 }
 
+// VehicleTrackRequest 获取车辆在途轨迹网址请求
+type VehicleTrackRequest struct {
+	OrderID          string `json:"orderId"`                    // 订单号
+	CreatedStartTime string `json:"createdStartTime,omitempty"` // 开始时间（格式：2021-08-02 12:20）
+	CreatedEndTime   string `json:"createdEndTime,omitempty"`   // 结束时间（格式：2021-08-02 13:20）
+}
+
+// VehicleTrackResponse 获取车辆在途轨迹网址响应
+type VehicleTrackResponse struct {
+	URL string `json:"url"` // 轨迹网址
+}
+
+// Coordinate 位置坐标信息
+type Coordinate struct {
+	Address     string `json:"address"`     // 位置
+	Longitude   string `json:"longitude"`   // 经度
+	Latitude    string `json:"latitude"`    // 纬度
+	CreatedTime string `json:"createdTime"` // 定位时间
+	Type        string `json:"type"`        // 地图类型 1-高德
+}
+
+// OrderCoordinateRequest 在途轨迹请求
+type OrderCoordinateRequest struct {
+	OrderID          string `json:"orderId"`                    // 订单号
+	CreatedStartTime string `json:"createdStartTime,omitempty"` // 开始时间（格式：2021-08-02 12:20）
+	CreatedEndTime   string `json:"createdEndTime,omitempty"`   // 结束时间（格式：2021-08-02 13:20）
+}
+
+// OrderCoordinateResponse 在途轨迹响应
+type OrderCoordinateResponse struct {
+	OrderID        string       `json:"orderId"`       // 订单号
+	DriverName     string       `json:"driverName"`    // 司机名称
+	PlateNumber    string       `json:"plateNumber"`   // 车牌号
+	DriverMobile   string       `json:"driverMobile"`  // 联系方式
+	CoordinateList []Coordinate `json:"cordinateList"` // 位置信息列表（注意：API使用cordinate拼写）
+}
+
 // CreateOrder 创建普通货订单（支持单货、多货）
 func (c *Client) CreateOrder(req *CreateOrderRequest) (*CreateOrderResponse, error) {
 	resp, err := c.Execute(MethodOrderCreateMore, req)
@@ -159,4 +200,42 @@ func (c *Client) ConfirmReceipt(req *ConfirmReceiptRequest) error {
 	}
 
 	return nil
+}
+
+// GetVehicleTrack 获取车辆在途轨迹网址
+func (c *Client) GetVehicleTrack(req *VehicleTrackRequest) (*VehicleTrackResponse, error) {
+	// 轨迹URL的params直接使用订单号字符串，不是JSON对象
+	// 使用map[string]string类型，buildRequestParams会自动识别并处理
+	params := map[string]string{
+		"params": req.OrderID,
+	}
+
+	// 构建请求参数（包含签名等）
+	reqParams, err := c.buildRequestParams(MethodVehicleTrack, params)
+	if err != nil {
+		return nil, err
+	}
+
+	// 构建轨迹URL
+	url, err := c.buildTrackURL(reqParams)
+	if err != nil {
+		return nil, err
+	}
+
+	return &VehicleTrackResponse{URL: url}, nil
+}
+
+// GetOrderCoordinate 获取订单在途轨迹坐标
+func (c *Client) GetOrderCoordinate(req *OrderCoordinateRequest) (*OrderCoordinateResponse, error) {
+	resp, err := c.Execute(MethodOrderCoordinate, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var result OrderCoordinateResponse
+	if err := resp.GetData(&result); err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }

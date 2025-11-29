@@ -42,10 +42,10 @@ type BreachResultNotification struct {
 
 // CallbackRequest 回调请求（包含验签参数）
 type CallbackRequest struct {
-	AppKey    string `json:"app_key"`    // 应用标识
-	Timestamp string `json:"timestamp"`  // 时间戳（秒）
-	Sign      string `json:"sign"`       // 签名
-	Data      string `json:"data"`       // 业务数据（JSON字符串）
+	AppKey    string `json:"app_key"`   // 应用标识
+	Timestamp string `json:"timestamp"` // 时间戳（秒）
+	Sign      string `json:"sign"`      // 签名
+	Data      string `json:"data"`      // 业务数据（JSON字符串）
 }
 
 // VerifyCallbackSign 验证回调签名
@@ -111,11 +111,12 @@ func (c *Client) generateCallbackSign(params map[string]string) string {
 // ParseCallback 解析回调数据（通用方法）
 // 参数 result 必须是指向结构体的指针
 // 示例：
-//   var delist DelistNotification
-//   err := client.ParseCallback(req, &delist)
 //
-//   var breach BreachResultNotification
-//   err := client.ParseCallback(req, &breach)
+//	var delist DelistNotification
+//	err := client.ParseCallback(req, &delist)
+//
+//	var breach BreachResultNotification
+//	err := client.ParseCallback(req, &breach)
 func (c *Client) ParseCallback(req *CallbackRequest, result any) error {
 	// 先验证签名
 	if err := c.VerifyCallbackSign(req); err != nil {

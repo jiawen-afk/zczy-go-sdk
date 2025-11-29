@@ -287,6 +287,114 @@ if err != nil {
 }
 ```
 
+#### 获取车辆在途轨迹网址
+
+方法：`GetVehicleTrack(req *VehicleTrackRequest) (*VehicleTrackResponse, error)`
+
+生成订单车辆的在途轨迹网址。此方法不发送网络请求，而是直接构建包含所有认证参数的完整URL，可在浏览器中直接打开查看轨迹。
+
+**参数说明：**
+
+- `OrderID`: 订单号（必填）
+- `CreatedStartTime`: 开始时间（选填，格式：2021-08-02 12:20）
+- `CreatedEndTime`: 结束时间（选填，格式：2021-08-02 13:20）
+
+**响应数据：**
+
+- `URL`: 轨迹网址（包含签名和加密参数，可直接在浏览器中打开）
+
+**示例：**
+
+```go
+// 基本用法：只传订单号
+req := &zczy.VehicleTrackRequest{
+    OrderID: "102019010101018811",
+}
+resp, err := client.GetVehicleTrack(req)
+if err != nil {
+    log.Printf("获取轨迹失败: %v", err)
+    return
+}
+fmt.Printf("轨迹网址: %s\n", resp.URL)
+// 可以将此URL嵌入到网页中或在浏览器中直接打开
+
+// 带时间范围查询
+req := &zczy.VehicleTrackRequest{
+    OrderID:          "102019010101018811",
+    CreatedStartTime: "2021-08-02 12:20",
+    CreatedEndTime:   "2021-08-02 13:20",
+}
+resp, err := client.GetVehicleTrack(req)
+if err != nil {
+    log.Printf("获取轨迹失败: %v", err)
+    return
+}
+fmt.Printf("轨迹网址: %s\n", resp.URL)
+```
+
+#### 获取订单在途轨迹坐标
+
+方法：`GetOrderCoordinate(req *OrderCoordinateRequest) (*OrderCoordinateResponse, error)`
+
+获取订单车辆的详细在途轨迹坐标信息，包括司机信息和位置坐标列表。
+
+**参数说明：**
+
+- `OrderID`: 订单号（必填）
+- `CreatedStartTime`: 开始时间（选填，格式：2021-08-02 12:20）
+- `CreatedEndTime`: 结束时间（选填，格式：2021-08-02 13:20）
+
+**响应数据：**
+
+- `OrderID`: 订单号
+- `DriverName`: 司机名称
+- `PlateNumber`: 车牌号
+- `DriverMobile`: 司机联系方式
+- `CoordinateList`: 位置坐标列表
+  - `Address`: 位置地址
+  - `Longitude`: 经度
+  - `Latitude`: 纬度
+  - `CreatedTime`: 定位时间
+  - `Type`: 地图类型（1-高德）
+
+**示例：**
+
+```go
+// 基本用法：只传订单号
+req := &zczy.OrderCoordinateRequest{
+    OrderID: "102019010101018811",
+}
+resp, err := client.GetOrderCoordinate(req)
+if err != nil {
+    log.Printf("获取轨迹坐标失败: %v", err)
+    return
+}
+
+fmt.Printf("订单号: %s\n", resp.OrderID)
+fmt.Printf("司机: %s (%s)\n", resp.DriverName, resp.DriverMobile)
+fmt.Printf("车牌号: %s\n", resp.PlateNumber)
+fmt.Printf("轨迹点数量: %d\n", len(resp.CoordinateList))
+
+for i, coord := range resp.CoordinateList {
+    fmt.Printf("位置 %d: %s\n", i+1, coord.Address)
+    fmt.Printf("  经纬度: (%s, %s)\n", coord.Longitude, coord.Latitude)
+    fmt.Printf("  定位时间: %s\n", coord.CreatedTime)
+}
+
+// 带时间范围查询
+req := &zczy.OrderCoordinateRequest{
+    OrderID:          "102019010101018811",
+    CreatedStartTime: "2021-08-02 12:20",
+    CreatedEndTime:   "2021-08-02 13:20",
+}
+resp, err := client.GetOrderCoordinate(req)
+if err != nil {
+    log.Printf("获取轨迹坐标失败: %v", err)
+    return
+}
+// 处理响应数据...
+```
+
 ## 回调接口
 
 SDK 支持接收中储智运平台的回调通知，并提供完整的签名验证功能。
