@@ -22,6 +22,7 @@ import (
 const (
 	// DefaultGateway 联调环境网关地址
 	DefaultGateway = "https://seal.zczy100.com/zczy-erp/api"
+	ProdGateway = "https://connect.zczy56.com/zczy-erp/api"
 	// Format 数据格式，暂时只支持json
 	Format = "json"
 	// SignMethod 签名方法，暂时只支持md5
