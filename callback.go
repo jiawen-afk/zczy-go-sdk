@@ -28,6 +28,7 @@ type DelistNotification struct {
 	PlateNumber       string `json:"plateNumber"`       // 车牌号
 	DriverUserName    string `json:"driverUserName"`    // 司机姓名
 	DriverMobile      string `json:"driverMobile"`      // 司机手机号
+	SafeguardCost     string `json:"safeguardCost"`     // 保险费
 }
 
 // BreachResultNotification 违约结果通知回调数据
