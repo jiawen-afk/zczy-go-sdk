@@ -22,7 +22,7 @@ import (
 const (
 	// DefaultGateway 联调环境网关地址
 	DefaultGateway = "https://seal.zczy100.com/zczy-erp/api"
-	ProdGateway = "https://connect.zczy56.com/zczy-erp/api"
+	ProdGateway    = "https://connect.zczy56.com/zczy-erp/api"
 	// Format 数据格式，暂时只支持json
 	Format = "json"
 	// SignMethod 签名方法，暂时只支持md5
@@ -254,30 +254,40 @@ func (c *Client) encryptAppSecret() (string, error) {
 			}
 		}
 	} else {
-		// 尝试Base64编码的原始公钥数据
+		// 非PEM格式，尝试多种可能的格式
+		var keyBytes []byte
+		var parseErr error
+
+		// 1. 尝试Base64解码
 		keyBytes, err := base64.StdEncoding.DecodeString(c.publicKey)
 		if err != nil {
-			return "", fmt.Errorf("failed to decode base64 public key: %w", err)
+			// Base64解码失败，可能是原始字节或其他格式
+			// 提供详细的错误信息帮助用户
+			return "", fmt.Errorf("public key format error: not PEM format and not valid base64 string. "+
+				"Supported formats: PEM (starting with -----BEGIN PUBLIC KEY-----) or Base64-encoded DER format. "+
+				"Error: %w", err)
 		}
 
-		// 尝试PKIX格式
+		// 2. 尝试PKIX格式
 		pub, err := x509.ParsePKIXPublicKey(keyBytes)
 		if err != nil {
-			// 尝试PKCS1格式
+			// 3. 尝试PKCS1格式
 			pub, err = x509.ParsePKCS1PublicKey(keyBytes)
 			if err != nil {
-				return "", fmt.Errorf("failed to parse public key: %w", err)
+				parseErr = err
+				return "", fmt.Errorf("failed to parse public key: tried both PKIX and PKCS1 formats. "+
+					"Please check your public key format. Last error: %w", parseErr)
 			}
 			var ok bool
 			rsaPub, ok = pub.(*rsa.PublicKey)
 			if !ok {
-				return "", errors.New("not RSA public key")
+				return "", errors.New("parsed key is not an RSA public key")
 			}
 		} else {
 			var ok bool
 			rsaPub, ok = pub.(*rsa.PublicKey)
 			if !ok {
-				return "", errors.New("not RSA public key")
+				return "", errors.New("parsed key is not an RSA public key")
 			}
 		}
 	}

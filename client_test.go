@@ -2,6 +2,7 @@ package zczy
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 )
 
@@ -254,6 +255,75 @@ SX4fwomlvWr3nVvx4rSzKGz176M/c9UsLQFqJkA0KIk0YxDgS1QG5K8CAwEAAQ==
 	}
 
 	t.Logf("加密后的appSecret: %s", encrypted)
+}
+
+// 测试无效公钥格式的错误处理
+func TestEncryptAppSecretWithInvalidKey(t *testing.T) {
+	tests := []struct {
+		name      string
+		publicKey string
+		wantErr   string
+	}{
+		{
+			name:      "非Base64字符串",
+			publicKey: "this is not a valid key!!!",
+			wantErr:   "not PEM format and not valid base64 string",
+		},
+		{
+			name:      "空字符串",
+			publicKey: "",
+			wantErr:   "failed to parse public key", // 空字符串可以Base64解码，但无法解析为公钥
+		},
+		{
+			name:      "无效的Base64数据",
+			publicKey: "SGVsbG8gV29ybGQ=", // "Hello World" base64，但不是有效的公钥
+			wantErr:   "failed to parse public key",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &Client{
+				appSecret: "test_secret",
+				publicKey: tt.publicKey,
+			}
+
+			_, err := client.encryptAppSecret()
+			if err == nil {
+				t.Errorf("期望返回错误，但成功了")
+				return
+			}
+
+			if !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("错误信息不包含预期内容\n期望包含: %s\n实际错误: %s", tt.wantErr, err.Error())
+			} else {
+				t.Logf("✓ 正确的错误信息: %s", err.Error())
+			}
+		})
+	}
+}
+
+// 测试用户提供的真实公钥
+func TestEncryptAppSecretWithRealKey(t *testing.T) {
+	// 用户提供的实际公钥
+	realPublicKey := "MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAIRAIe8HQC76V5oHRcKgoh8bv+x+xzCntwUhXEA3Gj/S+lD8KIod6hmvnL+cYOq7Tve/uqVOG88Ol4LmtMjTlU0CAwEAAQ=="
+
+	client := &Client{
+		appSecret: "test_app_secret",
+		publicKey: realPublicKey,
+	}
+
+	encrypted, err := client.encryptAppSecret()
+	if err != nil {
+		t.Fatalf("加密失败: %v", err)
+	}
+
+	if encrypted == "" {
+		t.Error("加密结果为空")
+	}
+
+	t.Logf("✓ 用户公钥加密成功！")
+	t.Logf("加密后的 appSecret: %s", encrypted)
 }
 
 // 测试ConsignorId配置
